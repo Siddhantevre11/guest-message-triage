@@ -1,0 +1,5 @@
+# Orchestrator-Worker multi-agent architecture with full reasoning Orchestrator
+
+The pipeline uses three specialized LLM agents — Orchestrator, Classifier, and Judge — rather than a single classifier with a validation gate. The Orchestrator is a full reasoning agent: it reads the raw guest message, reasons about context and signals, produces a routing plan with rationale, and optionally short-circuits to escalation if the message is clearly unclassifiable. The Classifier receives the Orchestrator's reasoning as enriched context in its prompt, not just a category hint. The Judge then independently verifies the Classifier's output. This makes the system a genuine multi-agent pipeline where agents collaborate rather than a single LLM call wrapped in retry logic.
+
+The alternative — keeping Classifier and Judge only, with LangGraph conditional edges as the implicit orchestrator — was rejected because it doesn't demonstrate orchestrator reasoning capability, which is a first-class requirement for the Besty interview.

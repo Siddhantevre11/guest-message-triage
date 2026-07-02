@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 1 — Your First Structured LLM Call</title>
+  <style>
+    :root {
+      --text: #1a1a1a;
+      --muted: #666;
+      --accent: #2563eb;
+      --bg: #fafaf8;
+      --code-bg: #f3f4f6;
+      --border: #e5e7eb;
+      --success: #16a34a;
+      --warn: #d97706;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Georgia', serif;
+      font-size: 18px;
+      line-height: 1.7;
+      color: var(--text);
+      background: var(--bg);
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 3rem 2rem 6rem;
+    }
+    h1 { font-size: 1.6rem; font-weight: normal; margin-bottom: 0.25rem; }
+    .subtitle { color: var(--muted); font-size: 0.95rem; margin-bottom: 2.5rem; font-family: monospace; }
+    h2 { font-size: 1.1rem; font-weight: bold; margin: 2.5rem 0 0.75rem; letter-spacing: 0.02em; text-transform: uppercase; font-size: 0.85rem; color: var(--muted); }
+    p { margin-bottom: 1rem; }
+    .callout {
+      border-left: 3px solid var(--accent);
+      padding: 0.75rem 1.25rem;
+      margin: 1.5rem 0;
+      background: #eff6ff;
+      font-size: 0.95rem;
+    }
+    .callout.warn { border-color: var(--warn); background: #fffbeb; }
+    .callout.success { border-color: var(--success); background: #f0fdf4; }
+    code, pre { font-family: 'Courier New', monospace; }
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.25rem 1.5rem;
+      overflow-x: auto;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      margin: 1.25rem 0;
+    }
+    code { background: var(--code-bg); padding: 0.1em 0.35em; border-radius: 3px; font-size: 0.85em; }
+    .step {
+      display: flex;
+      gap: 1rem;
+      margin: 1rem 0;
+      align-items: flex-start;
+    }
+    .step-num {
+      background: var(--accent);
+      color: white;
+      font-family: monospace;
+      font-size: 0.8rem;
+      width: 1.6rem;
+      height: 1.6rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 0.2rem;
+    }
+    .step-body { flex: 1; }
+
+    /* Quiz */
+    .quiz { margin: 2rem 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .quiz-header { background: var(--code-bg); padding: 0.75rem 1.25rem; font-size: 0.85rem; font-family: monospace; color: var(--muted); }
+    .quiz-body { padding: 1.25rem; }
+    .quiz-question { font-size: 1rem; margin-bottom: 1rem; font-style: italic; }
+    .quiz-options { display: flex; flex-direction: column; gap: 0.5rem; }
+    .quiz-option {
+      padding: 0.6rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      font-family: 'Georgia', serif;
+      font-size: 0.95rem;
+      text-align: left;
+      background: white;
+    }
+    .quiz-option:hover { border-color: var(--accent); background: #eff6ff; }
+    .quiz-option.correct { background: #f0fdf4; border-color: var(--success); color: var(--success); }
+    .quiz-option.wrong { background: #fef2f2; border-color: #ef4444; color: #ef4444; }
+    .quiz-feedback { margin-top: 1rem; font-size: 0.9rem; display: none; }
+    .quiz-feedback.show { display: block; }
+
+    .source-box {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      font-size: 0.88rem;
+      margin: 2rem 0;
+    }
+    .source-box a { color: var(--accent); }
+    footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--muted); }
+    a { color: var(--accent); }
+  </style>
+</head>
+<body>
+
+  <h1>Your First Structured LLM Call</h1>
+  <p class="subtitle">Lesson 01 · Project 1 — Guest Message Triage</p>
+
+  <p>Every project you're building — triage, upsell detection, policy Q&amp;A — is the same primitive under the hood: give an LLM a message, get back structured data. Master this once and the rest is wiring.</p>
+
+  <h2>The Core Concept</h2>
+
+  <p>When you call an LLM normally, it returns free text. That's fine for conversations, but useless when you need to route a message to a handler. You need a <em>guaranteed shape</em> every time.</p>
+
+  <p><code>model.with_structured_output(Schema)</code> wraps the LLM so it can only return data that matches your schema. If the model tries to return something that doesn't fit, the API rejects and retries internally — not your problem.</p>
+
+  <div class="callout">
+    <strong>The guarantee:</strong> Prompting for JSON gives you free text that <em>looks</em> like JSON. Structured output gives you a Python object with real types, every call. This is why ADR-0001 chose it.
+  </div>
+
+  <h2>The Pattern</h2>
+
+  <p>Three lines is all there is:</p>
+
+  <pre><code>llm = ChatGroq(model="llama3-8b-8192", temperature=0)
+classifier = llm.with_structured_output(ClassificationOutput)
+result = classifier.invoke(messages)</code></pre>
+
+  <p><code>result</code> is now a <code>ClassificationOutput</code> object — not a string, not a dict. Real fields you can read with <code>result.category</code>.</p>
+
+  <h2>The Full Code</h2>
+
+  <pre><code>import os
+from langchain_groq import ChatGroq
+from pydantic import BaseModel, Field
+from typing import Literal
+
+# 1. Define the output schema
+class ClassificationOutput(BaseModel):
+    category: Literal["maintenance", "booking", "complaint", "other"]
+    confidence: float = Field(ge=0.0, le=1.0)
+    summary: str = Field(description="One sentence: what does the guest want?")
+    suggested_action: Literal[
+        "dispatch_maintenance",
+        "handle_booking",
+        "handle_complaint",
+        "handle_other",
+        "escalate",
+    ]
+
+# 2. Create the structured LLM
+llm = ChatGroq(model="llama3-8b-8192", temperature=0)
+classifier = llm.with_structured_output(ClassificationOutput)
+
+# 3. Classify a message
+SYSTEM = """You classify guest messages for a short-term rental host.
+Categories: maintenance (physical issue), booking (reservation logistics),
+complaint (dissatisfaction), other (small talk, thanks, general questions).
+Set confidence low (under 0.7) when the message is ambiguous."""
+
+def classify(message: str) -> ClassificationOutput:
+    return classifier.invoke([
+        {"role": "system", "content": SYSTEM},
+        {"role": "user", "content": message},
+    ])
+
+# 4. Try it
+result = classify("The AC isn't working in my room.")
+print(result.category)        # maintenance
+print(result.confidence)      # 0.95 (or similar)
+print(result.summary)         # "Guest reports AC is not working."
+print(result.suggested_action) # dispatch_maintenance</code></pre>
+
+  <h2>Setup (Do This First)</h2>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">Install dependencies: <code>pip install langchain-groq pydantic</code></div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">Get a free Groq API key at <a href="https://console.groq.com" target="_blank">console.groq.com</a> → set it: <code>export GROQ_API_KEY=your_key_here</code></div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">Create <code>classifier.py</code>, paste the full code above, run it: <code>python classifier.py</code></div>
+  </div>
+
+  <h2>Exercise — Predict Before You Run</h2>
+
+  <div class="callout warn">
+    <strong>The rule:</strong> Before running each line below, write down what you expect <code>result.category</code> to be. Then run it. If it doesn't match — describe what you expected vs. what you got. Don't just ask to fix it until you can say why it's wrong.
+  </div>
+
+  <p>Add these five calls to your file, one at a time:</p>
+
+  <pre><code># 1. Clear maintenance
+classify("The shower drain is completely blocked.")
+
+# 2. Clear booking
+classify("Can I check out an hour late tomorrow?")
+
+# 3. Angry complaint
+classify("This place is disgusting. I want a refund immediately.")
+
+# 4. Low-stakes other
+classify("Thanks so much for everything, we had a wonderful stay!")
+
+# 5. Ambiguous — what does the model do?
+classify("There's a strange smell coming from the vents — is that normal?")</code></pre>
+
+  <p>For message 5: does it get <code>maintenance</code> or <code>complaint</code>? Check <code>result.confidence</code> — is it below 0.7?</p>
+
+  <h2>Check Your Understanding</h2>
+
+  <div class="quiz">
+    <div class="quiz-header">Quiz · Lesson 01</div>
+    <div class="quiz-body">
+      <p class="quiz-question">What does <code>.with_structured_output()</code> guarantee that prompting for JSON does NOT?</p>
+      <div class="quiz-options" id="q1-options">
+        <button class="quiz-option" onclick="answer(this, false, 'q1')">Faster inference speed on every call</button>
+        <button class="quiz-option" onclick="answer(this, true, 'q1')">A valid Python object matching your schema on every call</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q1')">Lower token cost per classification</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q1')">More accurate category labels from the model</button>
+      </div>
+      <div class="quiz-feedback" id="q1-feedback"></div>
+    </div>
+  </div>
+
+  <div class="quiz">
+    <div class="quiz-header">Quiz · Lesson 01</div>
+    <div class="quiz-body">
+      <p class="quiz-question">A message gets <code>confidence: 0.52</code>. According to the system design, what happens next?</p>
+      <div class="quiz-options" id="q2-options">
+        <button class="quiz-option" onclick="answer(this, false, 'q2')">It routes to the handler for its assigned category</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q2')">The classifier retries automatically with a different model</button>
+        <button class="quiz-option" onclick="answer(this, true, 'q2')">The judge rejects it and it goes to escalation</button>
+        <button class="quiz-option" onclick="answer(this, false, 'q2')">The system asks the guest to rephrase their message</button>
+      </div>
+      <div class="quiz-feedback" id="q2-feedback"></div>
+    </div>
+  </div>
+
+  <h2>Primary Source</h2>
+
+  <div class="source-box">
+    📖 <strong>Read this next:</strong><br>
+    <a href="https://console.groq.com/docs/langchain" target="_blank">Groq + LangChain Official Docs</a> — the canonical reference for ChatGroq setup and structured output. Everything in this lesson came from here.
+  </div>
+
+  <h2>What's Next</h2>
+
+  <p>Once this runs on all 5 messages, you have the core primitive. <strong>Lesson 02</strong> adds the judge — a second LLM call that independently re-evaluates every classification before it reaches a handler.</p>
+
+  <footer>
+    <strong>Questions?</strong> Ask your Claude Code teacher anything that's unclear — paste the exact error message or the unexpected output and say what you expected instead. That's the fastest path to unblocking.
+    <br><br>
+    <a href="../lessons/0002-judge-node.html">→ Lesson 02: The Judge Node</a> &nbsp;·&nbsp;
+    <a href="../CONTEXT.md">Domain Glossary</a> &nbsp;·&nbsp;
+    <a href="../RESOURCES.md">Resources</a>
+  </footer>
+
+  <script>
+    function answer(btn, correct, qid) {
+      const options = document.querySelectorAll(`#${qid}-options .quiz-option`);
+      options.forEach(o => o.disabled = true);
+      btn.classList.add(correct ? 'correct' : 'wrong');
+
+      const feedback = document.getElementById(`${qid}-feedback`);
+      feedback.classList.add('show');
+
+      if (correct) {
+        feedback.style.color = '#16a34a';
+        if (qid === 'q1') {
+          feedback.innerHTML = '✓ Correct. Structured output returns a real typed object. Prompt-only JSON is a string — malformed output requires you to handle it. Structured output shifts that burden to the API.';
+        } else {
+          feedback.innerHTML = '✓ Correct. The judge rejects anything below 0.7 confidence. It never reaches a handler — it routes to escalation instead (see ADR-0002).';
+        }
+      } else {
+        feedback.style.color = '#ef4444';
+        if (qid === 'q1') {
+          feedback.innerHTML = '✗ Not quite. Structured output does not change speed, cost, or model accuracy — it changes the <em>reliability of the output shape</em>. A prompt-for-JSON approach can silently return malformed JSON; structured output cannot.';
+        } else {
+          feedback.innerHTML = '✗ Not quite. Low confidence triggers the judge to reject the message. The judge is an inline hard gate — nothing below 0.7 reaches a handler (see ADR-0002).';
+        }
+      }
+    }
+  </script>
+
+</body>
+</html>

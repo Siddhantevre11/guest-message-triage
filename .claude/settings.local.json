@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "PowerShell(Start-Process \"C:\\\\Users\\\\sidev\\\\Desktop\\\\Guest_message_traige\\\\lessons\\\\0001-structured-llm-call.html\")",
+      "Read(//c/Users/sidev/.agents/skills/to-prd/**)",
+      "Read(//c/Users/sidev/.agents/skills/to-issues/**)",
+      "Bash(gh --version)",
+      "Bash(gh auth *)",
+      "PowerShell(gh *)",
+      "Bash(/c/Program Files/GitHub CLI/gh.exe *)",
+      "Bash(git init *)",
+      "Bash(git add *)"
+    ]
+  }
+}
