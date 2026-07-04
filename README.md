@@ -16,6 +16,13 @@ Copy `.env.example` to `.env` and set `GROQ_API_KEY`.
 python main.py
 ```
 
+Non-interactive modes for scripted/demo runs:
+
+```
+python main.py --message "What time is checkout?" --source-id SRC-1
+python main.py --batch messages.jsonl   # one {"message": ..., "source_id": ...} per line
+```
+
 ## Test
 
 ```
