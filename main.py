@@ -1,8 +1,16 @@
-import os
+import sys
 
 from dotenv import load_dotenv
 
 load_dotenv()
+
+from config import MissingConfigError, validate_environment
+
+try:
+    validate_environment()
+except MissingConfigError as e:
+    print(f"Configuration error: {e}")
+    sys.exit(1)
 
 from graph import build_graph
 

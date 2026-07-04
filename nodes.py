@@ -4,7 +4,7 @@ from langchain_groq import ChatGroq
 from models import ClassificationOutput, JudgeOutput, RoutingPlan, TriageState
 from prompts import CLASSIFIER_SYSTEM, JUDGE_SYSTEM, ORCHESTRATOR_SYSTEM
 
-_llm = ChatGroq(model="llama3-8b-8192", temperature=0)
+_llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
 
 orchestrator_chain = _llm.with_structured_output(RoutingPlan)
 classifier_chain = _llm.with_structured_output(ClassificationOutput)
