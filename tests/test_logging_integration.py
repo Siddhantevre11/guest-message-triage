@@ -34,4 +34,4 @@ def test_running_the_pipeline_writes_well_formed_log_lines(
     record = json.loads(lines[0])
     assert "node" in record
     assert "latency_ms" in record
-    assert "source_id" in record
+    assert "category" in record

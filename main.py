@@ -17,10 +17,9 @@ except MissingConfigError as e:
 from graph import build_graph
 
 
-def make_initial_state(message, source_id=None):
+def make_initial_state(message):
     return {
         "message": message,
-        "source_id": source_id,
         "preferred_category": None,
         "escalate_immediately": False,
         "orchestrator_context": "",
@@ -30,14 +29,13 @@ def make_initial_state(message, source_id=None):
         "suggested_action": None,
         "retry_count": 0,
         "judge_approved": None,
-        "hitl_triggered": False,
         "llm_call_failed": False,
     }
 
 
-def run_single(message, source_id=None):
+def run_single(message):
     app = build_graph()
-    return app.invoke(make_initial_state(message, source_id))
+    return app.invoke(make_initial_state(message))
 
 
 def run_batch(batch_path):
@@ -48,7 +46,7 @@ def run_batch(batch_path):
             if not line:
                 continue
             item = json.loads(line)
-            results.append(run_single(item["message"], item.get("source_id")))
+            results.append(run_single(item["message"]))
     return results
 
 
@@ -63,8 +61,7 @@ def print_result(result):
 def parse_args(argv=None):
     parser = argparse.ArgumentParser(description="Guest Message Triage — Besty")
     parser.add_argument("--message", help="Guest message to triage")
-    parser.add_argument("--source-id", dest="source_id", help="Source ID for the message")
-    parser.add_argument("--batch", help="Path to a JSONL file of {message, source_id} objects")
+    parser.add_argument("--batch", help="Path to a JSONL file of {message} objects")
     return parser.parse_args(argv)
 
 
@@ -77,13 +74,12 @@ def main(argv=None):
         return
 
     if args.message:
-        print_result(run_single(args.message, args.source_id))
+        print_result(run_single(args.message))
         return
 
     print("=== Guest Message Triage — Besty ===\n")
     message = input("Guest message: ").strip()
-    source_id = input("Source ID (press Enter to leave blank): ").strip() or None
-    print_result(run_single(message, source_id))
+    print_result(run_single(message))
 
 
 if __name__ == "__main__":

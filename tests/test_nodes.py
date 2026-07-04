@@ -1,7 +1,6 @@
 from models import ClassificationOutput, JudgeOutput, RoutingPlan
 from nodes import (
     booking_handler,
-    check_source_id_node,
     classifier_node,
     complaint_handler,
     escalation_handler,
@@ -10,18 +9,6 @@ from nodes import (
     orchestrator_node,
     other_handler,
 )
-
-
-def test_check_source_id_node_flags_hitl_when_source_id_missing(make_state):
-    result = check_source_id_node(make_state(source_id=None))
-
-    assert result == {"hitl_triggered": True}
-
-
-def test_check_source_id_node_passes_through_when_source_id_present(make_state):
-    result = check_source_id_node(make_state(source_id="SRC-1"))
-
-    assert result == {}
 
 
 def test_orchestrator_node_returns_routing_plan_fields(mock_orchestrator, make_state):

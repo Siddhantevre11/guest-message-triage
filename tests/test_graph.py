@@ -40,36 +40,6 @@ def test_approved_booking_message_routes_to_booking_handler(
     assert result["judge_approved"] is True
 
 
-def test_missing_source_id_is_collected_via_hitl_before_orchestrator_runs(
-    mock_orchestrator, mock_classifier, mock_judge, make_state, monkeypatch
-):
-    monkeypatch.setattr("builtins.input", lambda _: "SRC-COLLECTED")
-    mock_orchestrator(
-        RoutingPlan(
-            preferred_category="Other",
-            escalate_immediately=False,
-            context_notes="Small talk.",
-            routing_rationale="Guest is just saying hello.",
-        )
-    )
-    mock_classifier(
-        ClassificationOutput(
-            category="Other",
-            confidence=0.9,
-            summary="Guest says hello.",
-            suggested_action="handle_other",
-        )
-    )
-    mock_judge(JudgeOutput(approved=True, reason="Correct category and high confidence."))
-
-    app = build_graph()
-    result = app.invoke(make_state(message="Hi there!", source_id=None))
-
-    assert result["source_id"] == "SRC-COLLECTED"
-    assert result["hitl_triggered"] is False
-    assert result["suggested_action"] == "handle_other"
-
-
 def test_orchestrator_escalate_immediately_skips_classifier(
     mock_orchestrator, mock_classifier, mock_judge, make_state
 ):

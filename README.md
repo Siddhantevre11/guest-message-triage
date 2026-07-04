@@ -19,8 +19,8 @@ python main.py
 Non-interactive modes for scripted/demo runs:
 
 ```
-python main.py --message "What time is checkout?" --source-id SRC-1
-python main.py --batch messages.jsonl   # one {"message": ..., "source_id": ...} per line
+python main.py --message "What time is checkout?"
+python main.py --batch messages.jsonl   # one {"message": ...} per line
 ```
 
 ## Test

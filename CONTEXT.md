@@ -36,10 +36,6 @@ _Avoid_: Plan, strategy, orchestrator output
 
 ## Classification Output
 
-**Source ID**:
-Provenance metadata attached to an incoming message — identifies where the message came from so any classification or judgment can be traced back to its origin. Travels alongside the message content, not embedded in it.
-_Avoid_: Message ID, chunk ID, trace ID
-
 **Summary**:
 A one-sentence human-readable restatement of the guest message's core intent, generated alongside classification. Intended for a host scanning a list — not a rationale for the classification decision.
 _Avoid_: Description, explanation, rationale
@@ -53,12 +49,8 @@ A float between 0 and 1 representing how certain the classifier is about the ass
 _Avoid_: Score, certainty, probability
 
 **Escalation**:
-The path taken when confidence is too low to reliably classify a message. Routes to a human or fallback handler rather than guessing.
-_Avoid_: Fallback, catch-all, unknown
-
-**HITL (Human in the Loop)**:
-A clarification loop triggered when the pipeline cannot proceed — missing source ID or confidence below threshold after 3 retries. Pauses the pipeline, requests the missing information from the Host, then restarts classification with the enriched input.
-_Avoid_: Escalation, handoff, dead-end
+The sole human-handoff path in the pipeline — taken when the Orchestrator flags a message as unclassifiable, when the Judge rejects a classification three times, or when an LLM call exhausts its retries. Terminal: hands the message to a human with no pause-and-resume step. Not gated on any per-message provenance data (see ADR-0008).
+_Avoid_: HITL, fallback, catch-all, unknown
 
 ## Categories
 

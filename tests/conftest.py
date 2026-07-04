@@ -56,7 +56,6 @@ def make_state():
     def _make(**overrides):
         state = {
             "message": "Test message",
-            "source_id": "SRC-1",
             "preferred_category": None,
             "escalate_immediately": False,
             "orchestrator_context": "",
@@ -66,7 +65,6 @@ def make_state():
             "suggested_action": None,
             "retry_count": 0,
             "judge_approved": None,
-            "hitl_triggered": False,
             "llm_call_failed": False,
         }
         state.update(overrides)

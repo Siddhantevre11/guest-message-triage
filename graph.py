@@ -3,20 +3,14 @@ from langgraph.graph import END, StateGraph
 from models import TriageState
 from nodes import (
     booking_handler,
-    check_source_id_node,
     classifier_node,
     complaint_handler,
     escalation_handler,
-    hitl_node,
     judge_node,
     maintenance_handler,
     orchestrator_node,
     other_handler,
 )
-
-
-def _route_after_source_check(state: TriageState) -> str:
-    return "hitl" if state.get("hitl_triggered") else "orchestrator"
 
 
 def _route_after_orchestrator(state: TriageState) -> str:
@@ -42,8 +36,6 @@ def _route_after_judge(state: TriageState) -> str:
 def build_graph():
     graph = StateGraph(TriageState)
 
-    graph.add_node("check_source_id", check_source_id_node)
-    graph.add_node("hitl", hitl_node)
     graph.add_node("orchestrator", orchestrator_node)
     graph.add_node("classifier", classifier_node)
     graph.add_node("judge", judge_node)
@@ -53,14 +45,7 @@ def build_graph():
     graph.add_node("handle_complaint", complaint_handler)
     graph.add_node("handle_other", other_handler)
 
-    graph.set_entry_point("check_source_id")
-
-    graph.add_conditional_edges(
-        "check_source_id",
-        _route_after_source_check,
-        {"hitl": "hitl", "orchestrator": "orchestrator"},
-    )
-    graph.add_edge("hitl", "orchestrator")
+    graph.set_entry_point("orchestrator")
 
     graph.add_conditional_edges(
         "orchestrator",

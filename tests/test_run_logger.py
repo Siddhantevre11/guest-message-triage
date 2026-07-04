@@ -6,13 +6,13 @@ from run_logger import log_event, logged_node
 def test_log_event_appends_a_json_line_with_given_fields(tmp_path):
     log_path = tmp_path / "triage.jsonl"
 
-    log_event({"node": "orchestrator", "source_id": "SRC-1"}, log_path=log_path)
+    log_event({"node": "orchestrator", "category": "Booking"}, log_path=log_path)
 
     lines = log_path.read_text().splitlines()
     assert len(lines) == 1
     record = json.loads(lines[0])
     assert record["node"] == "orchestrator"
-    assert record["source_id"] == "SRC-1"
+    assert record["category"] == "Booking"
 
 
 def test_log_event_appends_rather_than_overwrites(tmp_path):
@@ -34,7 +34,7 @@ def test_logged_node_writes_merged_state_fields_and_latency(tmp_path, monkeypatc
     def fake_classifier_node(state):
         return {"category": "Booking", "confidence": 0.9, "retry_count": 1}
 
-    state = {"source_id": "SRC-1", "retry_count": 0}
+    state = {"retry_count": 0}
     result = fake_classifier_node(state)
 
     assert result == {"category": "Booking", "confidence": 0.9, "retry_count": 1}
@@ -43,7 +43,6 @@ def test_logged_node_writes_merged_state_fields_and_latency(tmp_path, monkeypatc
     assert len(lines) == 1
     record = json.loads(lines[0])
     assert record["node"] == "classifier"
-    assert record["source_id"] == "SRC-1"
     assert record["category"] == "Booking"
     assert record["confidence"] == 0.9
     assert record["retry_count"] == 1

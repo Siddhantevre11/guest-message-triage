@@ -6,15 +6,13 @@ def test_parse_args_defaults_to_interactive_mode_when_no_args_given():
     args = parse_args([])
 
     assert args.message is None
-    assert args.source_id is None
     assert args.batch is None
 
 
-def test_parse_args_reads_message_and_source_id_flags():
-    args = parse_args(["--message", "Hi there", "--source-id", "SRC-1"])
+def test_parse_args_reads_message_flag():
+    args = parse_args(["--message", "Hi there"])
 
     assert args.message == "Hi there"
-    assert args.source_id == "SRC-1"
     assert args.batch is None
 
 
@@ -43,14 +41,13 @@ def test_main_with_message_flag_skips_interactive_prompt(
     )
     mock_judge(JudgeOutput(approved=True, reason="Correct."))
 
-    main(["--message", "What time is checkout?", "--source-id", "SRC-1"])
+    main(["--message", "What time is checkout?"])
 
 
 def test_main_with_no_args_falls_back_to_interactive_prompt(
     mock_orchestrator, mock_classifier, mock_judge, monkeypatch
 ):
-    responses = iter(["What time is checkout?", "SRC-INTERACTIVE"])
-    monkeypatch.setattr("builtins.input", lambda _: next(responses))
+    monkeypatch.setattr("builtins.input", lambda _: "What time is checkout?")
     mock_orchestrator(
         RoutingPlan(
             preferred_category="Booking",
@@ -77,8 +74,8 @@ def test_main_with_batch_flag_processes_each_line_without_prompting(
 ):
     batch_file = tmp_path / "batch.jsonl"
     batch_file.write_text(
-        '{"message": "What time is checkout?", "source_id": "SRC-1"}\n'
-        '{"message": "The sink is leaking.", "source_id": "SRC-2"}\n'
+        '{"message": "What time is checkout?"}\n'
+        '{"message": "The sink is leaking."}\n'
     )
 
     def _fail_if_called(_):
@@ -106,28 +103,3 @@ def test_main_with_batch_flag_processes_each_line_without_prompting(
 
     output = capsys.readouterr().out
     assert output.count("=== Final Triage Result ===") == 2
-
-
-def test_main_with_message_flag_but_no_source_id_still_triggers_hitl(
-    mock_orchestrator, mock_classifier, mock_judge, monkeypatch
-):
-    monkeypatch.setattr("builtins.input", lambda _: "SRC-FROM-HITL")
-    mock_orchestrator(
-        RoutingPlan(
-            preferred_category="Booking",
-            escalate_immediately=False,
-            context_notes="",
-            routing_rationale="",
-        )
-    )
-    mock_classifier(
-        ClassificationOutput(
-            category="Booking",
-            confidence=0.9,
-            summary="Summary.",
-            suggested_action="handle_booking",
-        )
-    )
-    mock_judge(JudgeOutput(approved=True, reason="Correct."))
-
-    main(["--message", "What time is checkout?"])

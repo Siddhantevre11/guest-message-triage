@@ -15,13 +15,11 @@ def log_event(fields, log_path=DEFAULT_LOG_PATH):
 
 
 TRACKED_STATE_FIELDS = (
-    "source_id",
     "category",
     "confidence",
     "retry_count",
     "suggested_action",
     "judge_approved",
-    "hitl_triggered",
     "escalate_immediately",
     "llm_call_failed",
 )

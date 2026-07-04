@@ -13,21 +13,6 @@ classifier_chain = _llm.with_structured_output(ClassificationOutput)
 judge_chain = _llm.with_structured_output(JudgeOutput)
 
 
-@logged_node("check_source_id")
-def check_source_id_node(state: TriageState) -> dict:
-    if not state.get("source_id"):
-        return {"hitl_triggered": True}
-    return {}
-
-
-@logged_node("hitl")
-def hitl_node(state: TriageState) -> dict:
-    print("\n[HITL] Pipeline paused — Source ID is missing.")
-    print(f"  Message: {state['message']}")
-    source_id = input("  Please provide the Source ID: ").strip()
-    return {"source_id": source_id, "hitl_triggered": False}
-
-
 @logged_node("orchestrator")
 def orchestrator_node(state: TriageState) -> dict:
     messages = [
@@ -111,7 +96,6 @@ def judge_node(state: TriageState) -> dict:
 @logged_node("escalate")
 def escalation_handler(state: TriageState) -> dict:
     print("\n[ESCALATE] Message routed to human escalation.")
-    print(f"  Source ID : {state.get('source_id')}")
     print(f"  Message   : {state['message']}")
     print(f"  Retries   : {state.get('retry_count', 0)}")
     return {"suggested_action": "escalate"}

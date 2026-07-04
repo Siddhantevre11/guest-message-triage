@@ -25,7 +25,6 @@ class JudgeOutput(BaseModel):
 
 class TriageState(TypedDict):
     message: str
-    source_id: Optional[str]
     # Orchestrator output
     preferred_category: Optional[str]
     escalate_immediately: bool
@@ -38,5 +37,4 @@ class TriageState(TypedDict):
     # Control flow
     retry_count: int
     judge_approved: Optional[bool]
-    hitl_triggered: bool
     llm_call_failed: bool
