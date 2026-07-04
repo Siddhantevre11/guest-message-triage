@@ -1,5 +1,7 @@
+from backend.agents.classifier import ClassificationOutput
+from backend.agents.judge import JudgeOutput
+from backend.agents.orchestrator import RoutingPlan
 from main import main, parse_args
-from models import ClassificationOutput, JudgeOutput, RoutingPlan
 
 
 def test_parse_args_defaults_to_interactive_mode_when_no_args_given():

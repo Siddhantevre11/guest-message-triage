@@ -3,8 +3,10 @@ from unittest.mock import MagicMock
 import pytest
 from groq import APIConnectionError
 
-from graph import build_graph
-from models import ClassificationOutput, JudgeOutput, RoutingPlan
+from backend.agents.classifier import ClassificationOutput
+from backend.agents.judge import JudgeOutput
+from backend.agents.orchestrator import RoutingPlan
+from backend.graph import build_graph
 
 
 def _transient_error():

@@ -1,16 +1,16 @@
 from langgraph.graph import END, StateGraph
 
-from models import TriageState
-from nodes import (
+from backend.agents.classifier import classifier_node
+from backend.agents.judge import judge_node
+from backend.agents.orchestrator import orchestrator_node
+from backend.handlers import (
     booking_handler,
-    classifier_node,
     complaint_handler,
     escalation_handler,
-    judge_node,
     maintenance_handler,
-    orchestrator_node,
     other_handler,
 )
+from backend.state import TriageState
 
 
 def _route_after_orchestrator(state: TriageState) -> str:

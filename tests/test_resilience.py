@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 import pytest
 from groq import APIConnectionError, BadRequestError
 
-from resilience import RetriesExhaustedError, invoke_with_retry
+from backend.resilience import RetriesExhaustedError, invoke_with_retry
 
 
 def _api_connection_error():
@@ -11,7 +11,7 @@ def _api_connection_error():
 
 
 def test_invoke_with_retry_returns_result_after_transient_error_then_success(monkeypatch):
-    monkeypatch.setattr("resilience.time.sleep", lambda _: None)
+    monkeypatch.setattr("backend.resilience.time.sleep", lambda _: None)
     chain = MagicMock()
     chain.invoke.side_effect = [_api_connection_error(), "the result"]
 
@@ -22,7 +22,7 @@ def test_invoke_with_retry_returns_result_after_transient_error_then_success(mon
 
 
 def test_invoke_with_retry_raises_after_exhausting_all_attempts(monkeypatch):
-    monkeypatch.setattr("resilience.time.sleep", lambda _: None)
+    monkeypatch.setattr("backend.resilience.time.sleep", lambda _: None)
     chain = MagicMock()
     chain.invoke.side_effect = [
         _api_connection_error(),
@@ -37,7 +37,7 @@ def test_invoke_with_retry_raises_after_exhausting_all_attempts(monkeypatch):
 
 
 def test_invoke_with_retry_does_not_retry_non_transient_errors(monkeypatch):
-    monkeypatch.setattr("resilience.time.sleep", lambda _: None)
+    monkeypatch.setattr("backend.resilience.time.sleep", lambda _: None)
     chain = MagicMock()
     bad_request = BadRequestError("invalid request", response=MagicMock(), body=None)
     chain.invoke.side_effect = bad_request

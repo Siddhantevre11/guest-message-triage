@@ -1,6 +1,6 @@
 import json
 
-from run_logger import log_event, logged_node
+from backend.run_logger import log_event, logged_node
 
 
 def test_log_event_appends_a_json_line_with_given_fields(tmp_path):
@@ -28,7 +28,7 @@ def test_log_event_appends_rather_than_overwrites(tmp_path):
 
 
 def test_logged_node_writes_merged_state_fields_and_latency(tmp_path, monkeypatch):
-    monkeypatch.setattr("run_logger.DEFAULT_LOG_PATH", str(tmp_path / "triage.jsonl"))
+    monkeypatch.setattr("backend.run_logger.DEFAULT_LOG_PATH", str(tmp_path / "triage.jsonl"))
 
     @logged_node("classifier")
     def fake_classifier_node(state):

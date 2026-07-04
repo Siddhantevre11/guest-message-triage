@@ -1,8 +1,10 @@
 import json
 
-import run_logger
-from graph import build_graph
-from models import ClassificationOutput, JudgeOutput, RoutingPlan
+from backend import run_logger
+from backend.agents.classifier import ClassificationOutput
+from backend.agents.judge import JudgeOutput
+from backend.agents.orchestrator import RoutingPlan
+from backend.graph import build_graph
 
 
 def test_running_the_pipeline_writes_well_formed_log_lines(

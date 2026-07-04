@@ -1,12 +1,11 @@
-from models import ClassificationOutput, JudgeOutput, RoutingPlan
-from nodes import (
+from backend.agents.classifier import ClassificationOutput, classifier_node
+from backend.agents.judge import JudgeOutput, judge_node
+from backend.agents.orchestrator import RoutingPlan, orchestrator_node
+from backend.handlers import (
     booking_handler,
-    classifier_node,
     complaint_handler,
     escalation_handler,
-    judge_node,
     maintenance_handler,
-    orchestrator_node,
     other_handler,
 )
 

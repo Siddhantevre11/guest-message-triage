@@ -1,7 +1,9 @@
 import pytest
 
-from app import app
-from models import ClassificationOutput, JudgeOutput, RoutingPlan
+from backend.agents.classifier import ClassificationOutput
+from backend.agents.judge import JudgeOutput
+from backend.agents.orchestrator import RoutingPlan
+from frontend.app import app
 
 
 @pytest.fixture

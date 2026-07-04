@@ -1,6 +1,6 @@
 import pytest
 
-from config import MissingConfigError, validate_environment
+from backend.config import MissingConfigError, validate_environment
 
 
 def test_validate_environment_raises_when_groq_api_key_missing(monkeypatch):

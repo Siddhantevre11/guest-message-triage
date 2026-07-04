@@ -38,3 +38,28 @@ pytest
 ```
 
 The suite mocks the orchestrator/classifier/judge LLM calls, so it runs offline with no API key required.
+
+## Structure
+
+```
+backend/
+  agents/           one file per agent — prompt, schema, node function together
+    orchestrator.py
+    classifier.py
+    judge.py
+  graph.py           LangGraph wiring: how the agents connect
+  handlers.py         plain routing handlers (booking/maintenance/complaint/other/escalate) — not agents
+  pipeline.py         run_single() / run_batch() — the one interface both entry points call
+  llm.py              shared ChatGroq client
+  config.py           env validation
+  resilience.py        retry/backoff for transient LLM failures
+  run_logger.py         structured JSON-lines logging
+  bootstrap.py          load_environment() — .env loading + config validation, shared by both launchers
+frontend/
+  app.py              Flask routes + Host-facing presentation mapping
+  templates/index.html
+main.py                thin CLI launcher over backend.pipeline
+app.py                 thin Flask launcher over frontend.app
+```
+
+`main.py` and `app.py` never change how you run the project — `python main.py` and `python app.py` still work exactly as before. The frontend never imports agent internals directly; it only calls `backend.pipeline.run_single()`.
