@@ -35,7 +35,11 @@ class RoutingPlan(BaseModel):
     routing_rationale: str
 
 
-orchestrator_chain = llm.with_structured_output(RoutingPlan)
+_orchestrator_chain = llm.with_structured_output(RoutingPlan)
+
+
+def get_orchestrator_chain():
+    return _orchestrator_chain
 
 
 @logged_node("orchestrator")
@@ -45,7 +49,7 @@ def orchestrator_node(state: TriageState) -> dict:
         HumanMessage(content=f"Guest message: {state['message']}"),
     ]
     try:
-        plan: RoutingPlan = invoke_with_retry(orchestrator_chain, messages)
+        plan: RoutingPlan = invoke_with_retry(get_orchestrator_chain(), messages)
     except RetriesExhaustedError:
         print("\n[ORCHESTRATOR] LLM call failed after retries — escalating.")
         return {"llm_call_failed": True}

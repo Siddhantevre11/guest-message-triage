@@ -41,7 +41,11 @@ class ClassificationOutput(BaseModel):
     ]
 
 
-classifier_chain = llm.with_structured_output(ClassificationOutput)
+_classifier_chain = llm.with_structured_output(ClassificationOutput)
+
+
+def get_classifier_chain():
+    return _classifier_chain
 
 
 @logged_node("classifier")
@@ -54,7 +58,7 @@ def classifier_node(state: TriageState) -> dict:
         HumanMessage(content=f"Guest message: {state['message']}"),
     ]
     try:
-        result: ClassificationOutput = invoke_with_retry(classifier_chain, messages)
+        result: ClassificationOutput = invoke_with_retry(get_classifier_chain(), messages)
     except RetriesExhaustedError:
         print("\n[CLASSIFIER] LLM call failed after retries — escalating.")
         return {"llm_call_failed": True}

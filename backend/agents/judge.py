@@ -21,7 +21,11 @@ class JudgeOutput(BaseModel):
     reason: str
 
 
-judge_chain = llm.with_structured_output(JudgeOutput)
+_judge_chain = llm.with_structured_output(JudgeOutput)
+
+
+def get_judge_chain():
+    return _judge_chain
 
 
 @logged_node("judge")
@@ -38,7 +42,7 @@ def judge_node(state: TriageState) -> dict:
         ),
     ]
     try:
-        result: JudgeOutput = invoke_with_retry(judge_chain, messages)
+        result: JudgeOutput = invoke_with_retry(get_judge_chain(), messages)
     except RetriesExhaustedError:
         print("\n[JUDGE] LLM call failed after retries — escalating.")
         return {"llm_call_failed": True}

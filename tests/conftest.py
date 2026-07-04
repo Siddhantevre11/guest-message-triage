@@ -25,7 +25,7 @@ def mock_orchestrator(monkeypatch):
     def _set(plan):
         mock = MagicMock()
         mock.invoke.return_value = plan
-        monkeypatch.setattr(orchestrator_module, "orchestrator_chain", mock)
+        monkeypatch.setattr(orchestrator_module, "get_orchestrator_chain", lambda: mock)
         return mock
 
     return _set
@@ -36,7 +36,7 @@ def mock_classifier(monkeypatch):
     def _set(*outputs):
         mock = MagicMock()
         mock.invoke.side_effect = list(outputs)
-        monkeypatch.setattr(classifier_module, "classifier_chain", mock)
+        monkeypatch.setattr(classifier_module, "get_classifier_chain", lambda: mock)
         return mock
 
     return _set
@@ -47,7 +47,7 @@ def mock_judge(monkeypatch):
     def _set(*outputs):
         mock = MagicMock()
         mock.invoke.side_effect = list(outputs)
-        monkeypatch.setattr(judge_module, "judge_chain", mock)
+        monkeypatch.setattr(judge_module, "get_judge_chain", lambda: mock)
         return mock
 
     return _set

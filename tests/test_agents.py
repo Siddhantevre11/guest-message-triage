@@ -1,6 +1,6 @@
-from backend.agents.classifier import ClassificationOutput, classifier_node
-from backend.agents.judge import JudgeOutput, judge_node
-from backend.agents.orchestrator import RoutingPlan, orchestrator_node
+from backend.agents.classifier import ClassificationOutput, classifier_node, get_classifier_chain
+from backend.agents.judge import JudgeOutput, get_judge_chain, judge_node
+from backend.agents.orchestrator import RoutingPlan, get_orchestrator_chain, orchestrator_node
 from backend.handlers import (
     booking_handler,
     complaint_handler,
@@ -8,6 +8,18 @@ from backend.handlers import (
     maintenance_handler,
     other_handler,
 )
+
+
+def test_get_orchestrator_chain_returns_the_same_constructed_chain_each_call():
+    assert get_orchestrator_chain() is get_orchestrator_chain()
+
+
+def test_get_classifier_chain_returns_the_same_constructed_chain_each_call():
+    assert get_classifier_chain() is get_classifier_chain()
+
+
+def test_get_judge_chain_returns_the_same_constructed_chain_each_call():
+    assert get_judge_chain() is get_judge_chain()
 
 
 def test_orchestrator_node_returns_routing_plan_fields(mock_orchestrator, make_state):
