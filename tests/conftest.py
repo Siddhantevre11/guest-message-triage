@@ -13,6 +13,11 @@ def _no_retry_backoff(monkeypatch):
     monkeypatch.setattr("resilience.time.sleep", lambda _: None)
 
 
+@pytest.fixture(autouse=True)
+def _isolated_run_log(tmp_path, monkeypatch):
+    monkeypatch.setattr("run_logger.DEFAULT_LOG_PATH", str(tmp_path / "test-triage.jsonl"))
+
+
 @pytest.fixture
 def mock_orchestrator(monkeypatch):
     def _set(plan):

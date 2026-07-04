@@ -4,6 +4,7 @@ from langchain_groq import ChatGroq
 from models import ClassificationOutput, JudgeOutput, RoutingPlan, TriageState
 from prompts import CLASSIFIER_SYSTEM, JUDGE_SYSTEM, ORCHESTRATOR_SYSTEM
 from resilience import RetriesExhaustedError, invoke_with_retry
+from run_logger import logged_node
 
 _llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
 
@@ -12,12 +13,14 @@ classifier_chain = _llm.with_structured_output(ClassificationOutput)
 judge_chain = _llm.with_structured_output(JudgeOutput)
 
 
+@logged_node("check_source_id")
 def check_source_id_node(state: TriageState) -> dict:
     if not state.get("source_id"):
         return {"hitl_triggered": True}
     return {}
 
 
+@logged_node("hitl")
 def hitl_node(state: TriageState) -> dict:
     print("\n[HITL] Pipeline paused — Source ID is missing.")
     print(f"  Message: {state['message']}")
@@ -25,6 +28,7 @@ def hitl_node(state: TriageState) -> dict:
     return {"source_id": source_id, "hitl_triggered": False}
 
 
+@logged_node("orchestrator")
 def orchestrator_node(state: TriageState) -> dict:
     messages = [
         SystemMessage(content=ORCHESTRATOR_SYSTEM),
@@ -52,6 +56,7 @@ def orchestrator_node(state: TriageState) -> dict:
     }
 
 
+@logged_node("classifier")
 def classifier_node(state: TriageState) -> dict:
     system_prompt = CLASSIFIER_SYSTEM.format(
         orchestrator_context=state.get("orchestrator_context", "")
@@ -79,6 +84,7 @@ def classifier_node(state: TriageState) -> dict:
     }
 
 
+@logged_node("judge")
 def judge_node(state: TriageState) -> dict:
     messages = [
         SystemMessage(content=JUDGE_SYSTEM),
@@ -102,6 +108,7 @@ def judge_node(state: TriageState) -> dict:
     return {"judge_approved": result.approved}
 
 
+@logged_node("escalate")
 def escalation_handler(state: TriageState) -> dict:
     print("\n[ESCALATE] Message routed to human escalation.")
     print(f"  Source ID : {state.get('source_id')}")
@@ -110,24 +117,28 @@ def escalation_handler(state: TriageState) -> dict:
     return {"suggested_action": "escalate"}
 
 
+@logged_node("handle_booking")
 def booking_handler(state: TriageState) -> dict:
     print(f"\n[BOOKING] Routing to booking handler.")
     print(f"  {state['summary']}")
     return {}
 
 
+@logged_node("dispatch_maintenance")
 def maintenance_handler(state: TriageState) -> dict:
     print(f"\n[MAINTENANCE] Dispatching maintenance request.")
     print(f"  {state['summary']}")
     return {}
 
 
+@logged_node("handle_complaint")
 def complaint_handler(state: TriageState) -> dict:
     print(f"\n[COMPLAINT] Routing to complaint handler.")
     print(f"  {state['summary']}")
     return {}
 
 
+@logged_node("handle_other")
 def other_handler(state: TriageState) -> dict:
     print(f"\n[OTHER] Routing to general handler.")
     print(f"  {state['summary']}")
