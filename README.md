@@ -23,6 +23,14 @@ python main.py --message "What time is checkout?"
 python main.py --batch messages.jsonl   # one {"message": ...} per line
 ```
 
+## Web frontend
+
+```
+python app.py
+```
+
+Open http://127.0.0.1:5000 — a Host-inbox view: paste a guest message, see the triage result (category, summary, suggested action) as a clean card. This is a demo frontend, not production-hardened (no auth, no persistence). The Orchestrator/Classifier/Judge reasoning trace never reaches the browser — it stays in the console and `logs/triage.jsonl` for the developer.
+
 ## Test
 
 ```
