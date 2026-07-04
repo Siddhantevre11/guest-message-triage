@@ -1,7 +1,14 @@
+from unittest.mock import MagicMock
+
 import pytest
+from groq import APIConnectionError
 
 from graph import build_graph
 from models import ClassificationOutput, JudgeOutput, RoutingPlan
+
+
+def _transient_error():
+    return APIConnectionError(request=MagicMock())
 
 
 def test_approved_booking_message_routes_to_booking_handler(
@@ -188,3 +195,76 @@ def test_approved_classification_routes_to_matching_handler(
     result = app.invoke(make_state(message="Some message."))
 
     assert result["suggested_action"] == suggested_action
+
+
+def test_orchestrator_exhausting_retries_escalates_without_calling_classifier(
+    mock_orchestrator, mock_classifier, mock_judge, make_state
+):
+    orchestrator = mock_orchestrator(None)
+    orchestrator.invoke.side_effect = [
+        _transient_error(),
+        _transient_error(),
+        _transient_error(),
+    ]
+    classifier = mock_classifier()
+    mock_judge()
+
+    app = build_graph()
+    result = app.invoke(make_state(message="Some message."))
+
+    assert result["suggested_action"] == "escalate"
+    classifier.invoke.assert_not_called()
+
+
+def test_classifier_exhausting_retries_escalates_without_calling_judge(
+    mock_orchestrator, mock_classifier, mock_judge, make_state
+):
+    mock_orchestrator(
+        RoutingPlan(
+            preferred_category="Booking",
+            escalate_immediately=False,
+            context_notes="",
+            routing_rationale="",
+        )
+    )
+    classifier = mock_classifier(None)
+    classifier.invoke.side_effect = [
+        _transient_error(),
+        _transient_error(),
+        _transient_error(),
+    ]
+    judge = mock_judge()
+
+    app = build_graph()
+    result = app.invoke(make_state(message="Some message."))
+
+    assert result["suggested_action"] == "escalate"
+    judge.invoke.assert_not_called()
+
+
+def test_judge_exhausting_retries_escalates(
+    mock_orchestrator, mock_classifier, mock_judge, make_state
+):
+    mock_orchestrator(
+        RoutingPlan(
+            preferred_category="Booking",
+            escalate_immediately=False,
+            context_notes="",
+            routing_rationale="",
+        )
+    )
+    mock_classifier(
+        ClassificationOutput(
+            category="Booking",
+            confidence=0.9,
+            summary="Summary.",
+            suggested_action="handle_booking",
+        )
+    )
+    judge = mock_judge(None)
+    judge.invoke.side_effect = [_transient_error(), _transient_error(), _transient_error()]
+
+    app = build_graph()
+    result = app.invoke(make_state(message="Some message."))
+
+    assert result["suggested_action"] == "escalate"

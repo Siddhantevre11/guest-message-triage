@@ -39,3 +39,4 @@ class TriageState(TypedDict):
     retry_count: int
     judge_approved: Optional[bool]
     hitl_triggered: bool
+    llm_call_failed: bool

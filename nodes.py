@@ -3,6 +3,7 @@ from langchain_groq import ChatGroq
 
 from models import ClassificationOutput, JudgeOutput, RoutingPlan, TriageState
 from prompts import CLASSIFIER_SYSTEM, JUDGE_SYSTEM, ORCHESTRATOR_SYSTEM
+from resilience import RetriesExhaustedError, invoke_with_retry
 
 _llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
 
@@ -29,7 +30,11 @@ def orchestrator_node(state: TriageState) -> dict:
         SystemMessage(content=ORCHESTRATOR_SYSTEM),
         HumanMessage(content=f"Guest message: {state['message']}"),
     ]
-    plan: RoutingPlan = orchestrator_chain.invoke(messages)
+    try:
+        plan: RoutingPlan = invoke_with_retry(orchestrator_chain, messages)
+    except RetriesExhaustedError:
+        print("\n[ORCHESTRATOR] LLM call failed after retries — escalating.")
+        return {"llm_call_failed": True}
 
     print(f"\n[ORCHESTRATOR] Preferred: {plan.preferred_category} | Escalate immediately: {plan.escalate_immediately}")
     print(f"  Rationale: {plan.routing_rationale}")
@@ -55,7 +60,11 @@ def classifier_node(state: TriageState) -> dict:
         SystemMessage(content=system_prompt),
         HumanMessage(content=f"Guest message: {state['message']}"),
     ]
-    result: ClassificationOutput = classifier_chain.invoke(messages)
+    try:
+        result: ClassificationOutput = invoke_with_retry(classifier_chain, messages)
+    except RetriesExhaustedError:
+        print("\n[CLASSIFIER] LLM call failed after retries — escalating.")
+        return {"llm_call_failed": True}
 
     retry = state.get("retry_count", 0) + 1
     print(f"\n[CLASSIFIER] (attempt {retry}) Category: {result.category} | Confidence: {result.confidence:.2f}")
@@ -82,7 +91,11 @@ def judge_node(state: TriageState) -> dict:
             )
         ),
     ]
-    result: JudgeOutput = judge_chain.invoke(messages)
+    try:
+        result: JudgeOutput = invoke_with_retry(judge_chain, messages)
+    except RetriesExhaustedError:
+        print("\n[JUDGE] LLM call failed after retries — escalating.")
+        return {"llm_call_failed": True}
 
     print(f"\n[JUDGE] {'APPROVED' if result.approved else 'REJECTED'} — {result.reason}")
 

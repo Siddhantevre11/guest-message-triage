@@ -8,6 +8,11 @@ import pytest
 import nodes
 
 
+@pytest.fixture(autouse=True)
+def _no_retry_backoff(monkeypatch):
+    monkeypatch.setattr("resilience.time.sleep", lambda _: None)
+
+
 @pytest.fixture
 def mock_orchestrator(monkeypatch):
     def _set(plan):
@@ -57,6 +62,7 @@ def make_state():
             "retry_count": 0,
             "judge_approved": None,
             "hitl_triggered": False,
+            "llm_call_failed": False,
         }
         state.update(overrides)
         return state

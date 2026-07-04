@@ -34,6 +34,7 @@ def main():
         "retry_count": 0,
         "judge_approved": None,
         "hitl_triggered": False,
+        "llm_call_failed": False,
     }
 
     app = build_graph()

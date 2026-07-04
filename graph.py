@@ -20,10 +20,18 @@ def _route_after_source_check(state: TriageState) -> str:
 
 
 def _route_after_orchestrator(state: TriageState) -> str:
-    return "escalate" if state.get("escalate_immediately") else "classifier"
+    if state.get("llm_call_failed") or state.get("escalate_immediately"):
+        return "escalate"
+    return "classifier"
+
+
+def _route_after_classifier(state: TriageState) -> str:
+    return "escalate" if state.get("llm_call_failed") else "judge"
 
 
 def _route_after_judge(state: TriageState) -> str:
+    if state.get("llm_call_failed"):
+        return "escalate"
     if state.get("judge_approved"):
         return state.get("suggested_action", "escalate")
     if state.get("retry_count", 0) >= 3:
@@ -60,7 +68,11 @@ def build_graph():
         {"escalate": "escalate", "classifier": "classifier"},
     )
 
-    graph.add_edge("classifier", "judge")
+    graph.add_conditional_edges(
+        "classifier",
+        _route_after_classifier,
+        {"escalate": "escalate", "judge": "judge"},
+    )
 
     graph.add_conditional_edges(
         "judge",
